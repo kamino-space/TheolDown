@@ -11,9 +11,7 @@ class TheolDown(object):
     data = {
         'user': None,
         'runat': None,
-        'data': {
-            'resource': {}
-        }
+        'resource': {}
     }
 
     def __init__(self, host, cookie):
@@ -104,11 +102,11 @@ class TheolDown(object):
         if response.status_code != 200:
             raise Exception('服务器错误 %s' % response.status_code)
         soup = BeautifulSoup(response.content.decode('gbk'))
-        l = soup.findAll('td')
-        for i in range(len(l) // 2):
+        ld = soup.findAll('td')
+        for i in range(len(ld) // 2):
             try:
-                name = l[i * 2 + 0].get_text().strip()
-                href = l[i * 2 + 0].a.get('href')
+                name = ld[i * 2 + 0].get_text().strip()
+                href = ld[i * 2 + 0].a.get('href')
                 if re.search('listview.jsp', href) is not None:
                     resource[name] = self._scan_dir(href)
                 elif re.search('download_preview.jsp', href) is not None:
@@ -137,11 +135,11 @@ class TheolDown(object):
         if response.status_code != 200:
             raise Exception('服务器错误 %s' % response.status_code)
         soup = BeautifulSoup(response.content.decode('gbk'))
-        l = soup.findAll('td')
-        for i in range(len(l) // 2):
+        ld = soup.findAll('td')
+        for i in range(len(ld) // 2):
             try:
-                name = l[i * 2 + 0].get_text().strip()
-                href = l[i * 2 + 0].a.get('href')
+                name = ld[i * 2 + 0].get_text().strip()
+                href = ld[i * 2 + 0].a.get('href')
                 if re.search('listview.jsp', href) is not None:
                     resource[name] = self._scan_dir(href)
                 elif re.search('download_preview.jsp', href) is not None:
@@ -151,7 +149,7 @@ class TheolDown(object):
                     resource[name] = False
                 else:
                     pass
-            except Exception as e:
+            except Exception:
                 pass
             finally:
                 time.sleep(1)
@@ -162,9 +160,7 @@ class TheolDown(object):
         获取所有文件列表
         :return:
         """
-        print(self.lessons)
         for lesson in self.lessons:
-            print(lesson)
             print(lesson['name'])
             self.data['resource'][lesson['name']] = self.get_resource_list(lesson['lid'])
 
