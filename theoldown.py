@@ -266,7 +266,7 @@ class TheolDown(object):
             with open(self.save + 'data.json', 'w') as f:
                 f.write(json.dumps(self.data))
             self._end_at = int(time.time())
-            Log.info('用时%s秒', self._end_at - self._start_at)
+            Log.info('用时%s秒' % (self._end_at - self._start_at))
 
     def run_from_data_file(self, path):
         """
