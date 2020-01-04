@@ -35,6 +35,8 @@ class TheolDown(object):
                 self.host, fileid, resid, lid),
         }
         self.path = os.path.dirname(__file__) + '/'
+        if not os.path.exists(self.path + 'download/'):
+            os.mkdir(self.path + 'download/')
         self.save = self.path + 'download/%s/' % self.data['runat']
         self.session = requests.session()
         self.session.headers.update({
