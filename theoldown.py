@@ -31,7 +31,7 @@ class TheolDown(object):
             'lessons': 'http://%s/meol/lesson/blen.student.lesson.list.jsp' % self.host,
             'root': lambda lid: 'http://%s/meol/common/script/listview.jsp?lid=%s&folderid=0' % (self.host, lid),
             'url': lambda fileid, resid,
-                          lid: 'http://%s/meol/common/script/download.jsp?fileid=%s&resid=%s&lid=%s' % (
+            lid: 'http://%s/meol/common/script/download.jsp?fileid=%s&resid=%s&lid=%s' % (
                 self.host, fileid, resid, lid),
         }
         self.path = os.path.dirname(__file__) + '/'
@@ -66,7 +66,7 @@ class TheolDown(object):
             content = response.content.decode('gbk')
             if re.search('用户身份错误，请重新登录！', content) is not None:
                 raise Exception('用户身份错误，请重新登录！')
-            soup = BeautifulSoup(content)
+            soup = BeautifulSoup(content, "html.parser")
             self.data['user'] = soup.findAll('li')[0].get_text().strip('姓名：')
             Log.info('%s 登录成功' % self.data['user'])
         except Exception as e:
@@ -83,14 +83,14 @@ class TheolDown(object):
         if response.status_code != 200:
             raise Exception('服务器错误 %s' % response.status_code)
         self.lessons = []
-        soup = BeautifulSoup(response.content.decode('gbk'))
+        soup = BeautifulSoup(response.content.decode('gbk'), "html.parser")
         l = soup.findAll('td')
         for i in range(len(l) // 5):
             le = {
                 'name': l[i * 5 + 0].get_text().strip(),
                 'school': l[i * 5 + 1].get_text().strip(),
                 'teacher': l[i * 5 + 2].get_text().strip(),
-                'lid': l[i * 5 + 0].a.get('href').replace('init_course.jsp?lid=', '')
+                'lid': re.search(r'lid=(.*)', l[i * 5 + 4].a.get('href')).group(1)
             }
             self.lessons.append(le)
         self.data['lessons'] = self.lessons.copy()
@@ -107,7 +107,7 @@ class TheolDown(object):
         response = self.session.get(self.urls['root'](lid))
         if response.status_code != 200:
             raise Exception('服务器错误 %s' % response.status_code)
-        soup = BeautifulSoup(response.content.decode('gbk'))
+        soup = BeautifulSoup(response.content.decode('gbk'), "html.parser")
         lr = soup.findAll('tr')
         for i in range(1, len(lr)):
             try:
@@ -116,8 +116,10 @@ class TheolDown(object):
                 if re.search('listview.jsp', href) is not None:
                     resource[name] = self._scan_dir(href)
                 elif re.search('download_preview.jsp', href) is not None:
-                    attr = dict([l.split("=", 1) for l in href.strip('preview/download_preview.jsp?').split("&")])
-                    resource[name] = self.urls['url'](attr['fileid'], attr['resid'], attr['lid'])
+                    attr = dict([l.split("=", 1) for l in href.strip(
+                        'preview/download_preview.jsp?').split("&")])
+                    resource[name] = self.urls['url'](
+                        attr['fileid'], attr['resid'], attr['lid'])
                 elif re.search('onlinepreview.jsp', href) is not None:
                     resource[name] = False
                 else:
@@ -136,11 +138,12 @@ class TheolDown(object):
         :return:
         """
         Log.info('扫描目录 %s' % url)
-        response = self.session.get('http://%s/meol/common/script/%s' % (self.host, url))
+        response = self.session.get(
+            'http://%s/meol/common/script/%s' % (self.host, url))
         resource = {}
         if response.status_code != 200:
             raise Exception('服务器错误 %s' % response.status_code)
-        soup = BeautifulSoup(response.content.decode('gbk'))
+        soup = BeautifulSoup(response.content.decode('gbk'), "html.parser")
         lr = soup.findAll('tr')
         for i in range(1, len(lr)):
             try:
@@ -149,8 +152,10 @@ class TheolDown(object):
                 if re.search('listview.jsp', href) is not None:
                     resource[name] = self._scan_dir(href)
                 elif re.search('download_preview.jsp', href) is not None:
-                    attr = dict([l.split("=", 1) for l in href.strip('preview/download_preview.jsp?').split("&")])
-                    resource[name] = self.urls['url'](attr['fileid'], attr['resid'], attr['lid'])
+                    attr = dict([l.split("=", 1) for l in href.strip(
+                        'preview/download_preview.jsp?').split("&")])
+                    resource[name] = self.urls['url'](
+                        attr['fileid'], attr['resid'], attr['lid'])
                 elif re.search('onlinepreview.jsp', href) is not None:
                     resource[name] = False
                 else:
@@ -169,7 +174,8 @@ class TheolDown(object):
         """
         for lesson in self.lessons:
             Log.info('获取资源列表', lesson['name'])
-            self.data['resource'][lesson['name']] = self.get_resource_list(lesson['lid'])
+            self.data['resource'][lesson['name']
+                                  ] = self.get_resource_list(lesson['lid'])
 
     def make_dirs(self):
         """
@@ -222,7 +228,8 @@ class TheolDown(object):
         if response.status_code != 200:
             raise Exception('服务器错误 %s' % response.status_code)
         if 'Content-Disposition' in response.headers.keys():
-            extname = re.search(r'\.(.*)', response.headers['Content-Disposition']).group(0).strip('"')
+            extname = re.search(
+                r'\.(.*)', response.headers['Content-Disposition']).group(0).strip('"')
         elif response.headers['Content-Type'] == 'application/x-shockwave-flash':
             extname = '.swf'
         else:
