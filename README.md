@@ -1,5 +1,6 @@
 # THEOLDOWN
-用于批量下载网络教学平台(优慕课)的教学资源
+用于批量下载网络教学平台(优慕课)的教学资源  
+适用于 优慕课2019
 
 ## 运行环境
 python3 requests beautifulsoup4
